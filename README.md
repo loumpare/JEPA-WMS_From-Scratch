@@ -1,18 +1,30 @@
 # JEPA-WMS — From Scratch
 
-A personal learning project: reimplementing a **Joint Embedding Predictive Architecture (JEPA)** data, built from scratch in Python.
+A personal learning project: reimplementing a **Joint Embedding Predictive Architecture (JEPA)** for **World Model** learning, built from scratch in Python.
 
-> Built to understand self-supervised learning deeply — not to use a library, but to write every component by hand.
+> Built to understand self-supervised world modeling deeply — every component written by hand, no high-level SSL library.
 
 ---
 
 ## What this project covers
 
-- Vision Transformer (ViT) backbone — implemented from scratch in `models/vit.py`
-- DINO-style self-supervised training — `models/dino.py`
-- Custom dataset pipeline on PushT-style WMS sequences — `data/dataset_PushT.py`
+- Vision Transformer (ViT) backbone — `models/vit.py`
+- DINO-style self-supervised objective — `models/dino.py`
+- World model training on PushT environment sequences — `data/dataset_PushT.py`
 - Training loop with EMA target encoder — `src/training.py`
-- Benchmarking downstream task performance — `src/benchmark.py`
+- Downstream task benchmarking — `src/benchmark.py`
+
+---
+
+## Core idea
+
+Rather than predicting future observations in pixel space (like a video model), JEPA learns to predict **future latent representations** given a context. Applied to world modeling, this means the model learns a structured embedding space that captures the dynamics of an environment — without ever reconstructing raw observations.
+
+```
+context state ──► context encoder ──► predictor ──► predicted latent
+                                                           ▲
+target state  ──► target encoder (EMA) ──────────────────── (loss)
+```
 
 ---
 
@@ -20,16 +32,16 @@ A personal learning project: reimplementing a **Joint Embedding Predictive Archi
 
 ```
 data/
-  dataset_PushT.py    # Dataset class for WMS event sequences
-  utils.py            # Data preprocessing helpers
+  dataset_PushT.py    # PushT environment episode dataset
+  utils.py            # Preprocessing, normalization
 models/
-  vit.py              # Vision Transformer backbone
+  vit.py              # Vision Transformer backbone (from scratch)
   dino.py             # DINO self-supervised objective
-  utils.py            # EMA update, weight init
+  utils.py            # EMA update, weight initialization
 src/
   main.py             # Entry point
   training.py         # Training loop
-  benchmark.py        # Downstream evaluation
+  benchmark.py        # Evaluation on downstream tasks
 ```
 
 ---
@@ -52,18 +64,9 @@ pip install -r requirements.txt
 ## Run
 
 ```bash
-# Train
-python src/main.py
-
-# Benchmark
-python src/benchmark.py
+python src/main.py        # train
+python src/benchmark.py   # evaluate
 ```
-
----
-
-## Why JEPA for WMS?
-
-Standard supervised approaches for warehouse systems (demand forecasting, slot assignment, order flow) require large labeled datasets. JEPA learns useful representations from raw sequences **without labels**, by predicting latent representations of future states — making it well suited to WMS data where annotations are scarce.
 
 ---
 
